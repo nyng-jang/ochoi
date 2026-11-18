@@ -2,7 +2,7 @@
 -- 공유 테이블: 아티스트 단위로 한 번만 조회해 모든 사용자가 같이 씀 (읽기는 로그인 사용자 전체, 쓰기는 서버(service role)만)
 -- 개인 테이블: RLS로 본인 데이터만 접근
 
-create extension if not exists pg_trgm;
+create extension if not exists pg_trgm with schema extensions;
 
 -- ───────────────────────── 공유: 아티스트 ─────────────────────────
 
@@ -71,7 +71,7 @@ create table public.events (
   updated_at   timestamptz not null default now()
 );
 create index events_artist_time_idx on public.events (artist_id, starts_at);
-create index events_title_trgm_idx on public.events using gin (title gin_trgm_ops); -- 중복 검사용 유사도
+create index events_title_trgm_idx on public.events using gin (title extensions.gin_trgm_ops); -- 중복 검사용 유사도
 
 -- 공식 채널 영상 (N년 전 오늘)
 create table public.videos (
