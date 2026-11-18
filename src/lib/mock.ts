@@ -79,28 +79,34 @@ export const ALBUMS: MockAlbum[] = [
   { id: "a12", title: "Lumière", version: "Platform", format: "platform", color: "#2f6f5a", color2: "#9fd8c4", year: 2026, owned: false },
 ];
 
+export type MockTrade = { date: string; kind: "구매" | "교환" | "양도" | "앨범 개봉"; price: number; memo?: string };
 export type MockCard = {
   id: string;
   memberId: string;
   album: string;
   rare?: boolean;
   owned: boolean;
+  /** 보유 포카 상세 (목업) */
+  acquiredOn?: string;
+  price?: number;
+  history?: MockTrade[];
+  binderSlot?: string;
 };
 
 const lumi = ARTISTS[0].members;
 export const CARDS: MockCard[] = [
-  { id: "c1", memberId: lumi[0].id, album: "First Light", owned: true },
-  { id: "c2", memberId: lumi[1].id, album: "First Light", owned: true },
+  { id: "c1", memberId: lumi[0].id, album: "First Light", owned: true, acquiredOn: "2021.05.20", price: 0, history: [{ date: "2021.05.20", kind: "앨범 개봉", price: 0, memo: "First Light 포토북" }] },
+  { id: "c2", memberId: lumi[1].id, album: "First Light", owned: true, acquiredOn: "2021.06.02", price: 3000, history: [{ date: "2021.06.02", kind: "구매", price: 3000, memo: "번개장터" }] },
   { id: "c3", memberId: lumi[2].id, album: "First Light", owned: false },
-  { id: "c4", memberId: lumi[3].id, album: "First Light", owned: true, rare: true },
-  { id: "c5", memberId: lumi[4].id, album: "Moonwalk", owned: true },
-  { id: "c6", memberId: lumi[0].id, album: "Moonwalk", owned: true, rare: true },
+  { id: "c4", memberId: lumi[3].id, album: "First Light", owned: true, rare: true, acquiredOn: "2022.01.15", price: 18000, history: [{ date: "2021.12.30", kind: "교환", price: 0, memo: "유나 포카와 교환 제안 → 무산" }, { date: "2022.01.15", kind: "구매", price: 18000, memo: "럭키드로우 · X 양도글" }] },
+  { id: "c5", memberId: lumi[4].id, album: "Moonwalk", owned: true, acquiredOn: "2022.08.11", price: 0, history: [{ date: "2022.08.11", kind: "앨범 개봉", price: 0, memo: "Moonwalk Night ver." }] },
+  { id: "c6", memberId: lumi[0].id, album: "Moonwalk", owned: true, rare: true, acquiredOn: "2022.09.03", price: 25000, history: [{ date: "2022.09.03", kind: "구매", price: 25000, memo: "팬사인회 특전" }] },
   { id: "c7", memberId: lumi[1].id, album: "Moonwalk", owned: false },
-  { id: "c8", memberId: lumi[2].id, album: "Moonwalk", owned: true },
-  { id: "c9", memberId: lumi[3].id, album: "Sugar Rush", owned: true },
+  { id: "c8", memberId: lumi[2].id, album: "Moonwalk", owned: true, acquiredOn: "2022.08.20", price: 4000, history: [{ date: "2022.08.20", kind: "교환", price: 4000, memo: "하린 포카 + 4,000원" }] },
+  { id: "c9", memberId: lumi[3].id, album: "Sugar Rush", owned: true, acquiredOn: "2023.03.10", price: 0, history: [{ date: "2023.03.10", kind: "앨범 개봉", price: 0, memo: "Sugar Rush Jewel" }] },
   { id: "c10", memberId: lumi[4].id, album: "Sugar Rush", owned: false },
-  { id: "c11", memberId: lumi[0].id, album: "Sugar Rush", owned: true },
-  { id: "c12", memberId: lumi[1].id, album: "Sugar Rush", owned: true, rare: true },
+  { id: "c11", memberId: lumi[0].id, album: "Sugar Rush", owned: true, acquiredOn: "2023.03.10", price: 0, history: [{ date: "2023.03.10", kind: "앨범 개봉", price: 0 }] },
+  { id: "c12", memberId: lumi[1].id, album: "Sugar Rush", owned: true, rare: true, acquiredOn: "2023.04.01", price: 32000, history: [{ date: "2023.04.01", kind: "구매", price: 32000, memo: "미공포 · 시세 확인 후 구매" }] },
 ];
 
 export const memberById = (id: string) =>

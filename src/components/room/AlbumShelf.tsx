@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import type { AlbumFormat, MockAlbum } from "@/lib/mock";
 
 // 앨범 형태별 책등 크기 (포토북은 두껍고 높게, 플랫폼 앨범은 아주 얇게)
@@ -97,6 +98,8 @@ export default function AlbumShelf({ albums, perRow = 12, interactive = true, cl
         </div>
       ))}
 
+      {typeof document !== "undefined" &&
+        createPortal(
       <AnimatePresence>
         {picked && (
           <motion.div
@@ -135,7 +138,9 @@ export default function AlbumShelf({ albums, perRow = 12, interactive = true, cl
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+          document.body,
+        )}
     </div>
   );
 }
