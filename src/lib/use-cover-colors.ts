@@ -22,7 +22,7 @@ export function useCoverColors(items: { id: string; coverUrl?: string | null }[]
     items.forEach((it) => {
       if (!it.coverUrl) return;
       const img = new window.Image();
-      img.src = `/_next/image?url=${encodeURIComponent(it.coverUrl)}&w=64&q=60`;
+      img.src = `/_next/image?url=${encodeURIComponent(it.coverUrl)}&w=64&q=75`;
       img.onload = () => {
         try {
           const c = document.createElement("canvas");
