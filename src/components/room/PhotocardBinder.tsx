@@ -7,7 +7,7 @@ import { memberById, type MockCard } from "@/lib/mock";
 
 /** 포카 한 장 (가상의 멤버 컬러 그래픽). rare면 홀로그램 반짝임 */
 export function Photocard({ card }: { card: MockCard }) {
-  const m = memberById(card.memberId);
+  const m = card.member ?? memberById(card.memberId);
   return (
     <div
       data-card
@@ -36,7 +36,7 @@ export function Pocket({ card, onOpen }: { card?: MockCard; onOpen?: (c: MockCar
       data-pocket
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
-      aria-label={card ? `${memberById(card.memberId).name} ${card.album} 포카 ${card.owned ? "" : "(미보유)"} 상세 보기` : undefined}
+      aria-label={card ? `${(card.member ?? memberById(card.memberId)).name} ${card.album} 포카 ${card.owned ? "" : "(미보유)"} 상세 보기` : undefined}
       onClick={clickable ? () => onOpen!(card!) : undefined}
       onKeyDown={clickable ? (e) => (e.key === "Enter" || e.key === " ") && onOpen!(card!) : undefined}
     >
@@ -45,7 +45,7 @@ export function Pocket({ card, onOpen }: { card?: MockCard; onOpen?: (c: MockCar
       ) : card ? (
         <div className="absolute inset-1 flex flex-col items-center justify-center rounded-md border border-dashed border-ink/20 text-center">
           <div className="mb-1 h-6 w-6 rounded-full bg-ink/10" />
-          <p className="text-[10px] font-bold text-ink-soft">{memberById(card.memberId).name}</p>
+          <p className="text-[10px] font-bold text-ink-soft">{(card.member ?? memberById(card.memberId)).name}</p>
           <p className="text-[9px] text-ink-soft/70">미보유</p>
         </div>
       ) : null}
@@ -153,7 +153,7 @@ export default function PhotocardBinder({ cards, perPage = 4, coverColor = "#ff8
 
 /** 포카 상세: 탭하면 앞뒷면이 뒤집히고, 구한 날짜·가격·거래 기록·시세 바로가기를 보여줌 */
 export function PhotocardDetail({ card, onClose }: { card: MockCard; onClose: () => void }) {
-  const m = memberById(card.memberId);
+  const m = card.member ?? memberById(card.memberId);
   const [flipped, setFlipped] = useState(false);
   const q = encodeURIComponent(`${m.name} ${card.album} 포카`);
   return (
@@ -184,7 +184,7 @@ export function PhotocardDetail({ card, onClose }: { card: MockCard; onClose: ()
               className="absolute inset-0 flex flex-col items-center justify-center rounded-xl text-center shadow-xl"
               style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: `linear-gradient(200deg, ${m.color}, #fff 130%)` }}
             >
-              <p className="text-xl font-black tracking-widest text-white">LUMI</p>
+              <p className="text-xl font-black tracking-widest text-white">{card.groupName ?? "LUMI"}</p>
               <p className="mt-1 text-[10px] font-bold text-white/90">{card.album}</p>
               <p className="mt-6 -rotate-6 font-serif text-lg italic text-white">{m.name}</p>
             </div>

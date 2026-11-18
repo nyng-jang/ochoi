@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import type { AlbumFormat, MockAlbum } from "@/lib/mock";
 
 // 앨범 형태별 책등 크기 (포토북은 두껍고 높게, 플랫폼 앨범은 아주 얇게)
@@ -28,6 +29,13 @@ function isDark(hex: string) {
 
 /** 앨범 커버 (가상의 일러스트풍 그래픽) */
 export function AlbumCover({ album, className = "" }: { album: MockAlbum; className?: string }) {
+  if (album.coverUrl) {
+    return (
+      <div className={`relative aspect-square overflow-hidden rounded-xl bg-line ${className}`}>
+        <Image src={album.coverUrl} alt={`${album.title} 앨범 커버`} fill sizes="320px" className="object-cover" />
+      </div>
+    );
+  }
   return (
     <div
       className={`@container relative aspect-square overflow-hidden rounded-xl ${className}`}
@@ -72,14 +80,18 @@ export function Spine({ album, onClick }: { album: MockAlbum; onClick?: () => vo
 
 type Props = {
   albums: MockAlbum[];
+  /** 앨범 상세에서 보유/미보유 전환 (실제 데이터 방) */
+  onToggleOwned?: (id: string) => void;
   /** 한 칸에 꽂을 최대 개수. 넘으면 다음 칸으로 */
   perRow?: number;
   interactive?: boolean;
   className?: string;
 };
 
-export default function AlbumShelf({ albums, perRow = 12, interactive = true, className = "" }: Props) {
-  const [picked, setPicked] = useState<MockAlbum | null>(null);
+export default function AlbumShelf({ albums, onToggleOwned, perRow = 12, interactive = true, className = "" }: Props) {
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const picked = albums.find((a) => a.id === pickedId) ?? null;
+  const setPicked = (a: MockAlbum | null) => setPickedId(a?.id ?? null);
   const rows: MockAlbum[][] = [];
   for (let i = 0; i < albums.length; i += perRow) rows.push(albums.slice(i, i + perRow));
 
@@ -123,7 +135,8 @@ export default function AlbumShelf({ albums, perRow = 12, interactive = true, cl
                 <div>
                   <p className="text-lg font-bold">{picked.title}</p>
                   <p className="text-sm text-ink-soft">
-                    {picked.version} · {FORMAT_LABEL[picked.format]} · {picked.year}
+                    {picked.version} · {picked.releaseDate ?? picked.year}
+                    {!picked.coverUrl && ` · ${FORMAT_LABEL[picked.format]}`}
                   </p>
                 </div>
                 <span
@@ -132,8 +145,15 @@ export default function AlbumShelf({ albums, perRow = 12, interactive = true, cl
                   {picked.owned ? "보유" : "미보유"}
                 </span>
               </div>
-              {!picked.owned && (
-                <button className="mt-4 w-full rounded-2xl bg-ink py-3 text-sm font-bold text-white">위시리스트에 담기</button>
+              {onToggleOwned ? (
+                <button
+                  onClick={() => onToggleOwned(picked.id)}
+                  className={`mt-4 w-full rounded-2xl py-3 text-sm font-bold ${picked.owned ? "bg-line text-ink" : "bg-ink text-white"}`}
+                >
+                  {picked.owned ? "미보유로 바꾸기" : "가지고 있어요 (선반에 꽂기)"}
+                </button>
+              ) : (
+                !picked.owned && <button className="mt-4 w-full rounded-2xl bg-ink py-3 text-sm font-bold text-white">위시리스트에 담기</button>
               )}
             </motion.div>
           </motion.div>

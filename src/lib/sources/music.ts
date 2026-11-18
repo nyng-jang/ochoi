@@ -24,6 +24,25 @@ function mbType(t?: string): Release["releaseType"] {
   return v === "album" || v === "ep" || v === "single" ? v : "other";
 }
 
+/**
+ * 위키데이터에 적힌 MusicBrainz ID가 오래돼서 404가 나는 경우가 있음 (예: IVE).
+ * 그때는 MusicBrainz에서 위키데이터 링크로 역조회해 현재 ID를 찾는다.
+ */
+export async function resolveMusicBrainzId(wikidataId: string, mbid?: string): Promise<string | undefined> {
+  if (mbid) {
+    try {
+      await fetchJson(`https://musicbrainz.org/ws/2/artist/${mbid}?fmt=json`, {}, { retries: 2 });
+      return mbid;
+    } catch (e) {
+      if (!String(e).includes("404")) throw e;
+    }
+  }
+  const data = await fetchJson<{ relations?: { artist?: { id: string } }[] }>(
+    `https://musicbrainz.org/ws/2/url?resource=${encodeURIComponent(`https://www.wikidata.org/wiki/${wikidataId}`)}&inc=artist-rels&fmt=json`,
+  ).catch(() => ({ relations: [] }));
+  return data.relations?.find((r) => r.artist)?.artist?.id;
+}
+
 export async function getMusicBrainzReleases(mbid: string): Promise<Release[]> {
   const out: Release[] = [];
   for (let offset = 0; ; offset += 100) {
@@ -61,17 +80,23 @@ export async function getDeezerReleases(deezerArtistId: string): Promise<Release
 }
 
 /**
- * 두 소스 합치기: 발매일 + 종류가 같으면 같은 앨범으로 보고
- * 제목은 MusicBrainz(한글), 커버는 Deezer가 있으면 Deezer 사용.
+ * 두 소스 합치기: 제목이 같고 발매일이 7일 이내이거나, 발매일과 종류가 같으면 같은 앨범으로 본다.
+ * 제목은 MusicBrainz(한글 표기 우선), 커버는 Deezer가 있으면 Deezer 사용.
  */
+const norm = (t: string) => t.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+const days = (a: string | null, b: string | null) =>
+  a && b ? Math.abs(Date.parse(a) - Date.parse(b)) / 864e5 : Infinity;
+
 export function mergeReleases(mb: Release[], dz: Release[]): Release[] {
   const merged = mb.map((r) => ({ ...r }));
   for (const d of dz) {
-    const same = merged.find(
-      (m) => m.releaseDate && m.releaseDate === d.releaseDate && (m.releaseType === d.releaseType || m.releaseType === "other"),
-    );
+    const same =
+      merged.find((m) => !m.deezerAlbumId && norm(m.title) === norm(d.title) && days(m.releaseDate, d.releaseDate) <= 7) ??
+      merged.find(
+        (m) => !m.deezerAlbumId && m.releaseDate === d.releaseDate && m.releaseType === d.releaseType && m.releaseType !== "other",
+      );
     if (same) {
-      same.titleAlt = d.title;
+      if (norm(same.title) !== norm(d.title)) same.titleAlt = d.title;
       same.deezerAlbumId = d.deezerAlbumId;
       same.coverUrl = d.coverUrl ?? same.coverUrl;
     } else {
@@ -79,6 +104,26 @@ export function mergeReleases(mb: Release[], dz: Release[]): Release[] {
     }
   }
   return merged.sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
+}
+
+/**
+ * 앨범 선반에 꽂을 실물 위주 발매만 고르기.
+ * 리믹스·일본어 버전·라이브·특별 편집은 빼고, 같은 제목의 EP/정규가 있으면 싱글은 뺀다.
+ */
+const NOT_ON_SHELF = /remix|sped up|japanese|version|ver\.|\blive\b|spotify|commentary|edition|film|instrumental/i;
+export function shelfReleases<T extends { title: string; releaseType: string | null }>(list: T[]): T[] {
+  const big = new Set(list.filter((r) => r.releaseType === "album" || r.releaseType === "ep").map((r) => norm(r.title)));
+  const seen = new Set<string>();
+  return list.filter((r) => {
+    const key = `${r.releaseType}:${norm(r.title)}`;
+    const keep =
+      r.releaseType !== "other" &&
+      !NOT_ON_SHELF.test(r.title) &&
+      !(r.releaseType === "single" && big.has(norm(r.title))) &&
+      !seen.has(key);
+    seen.add(key);
+    return keep;
+  });
 }
 
 function normalizeDate(d?: string): string | null {

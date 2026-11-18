@@ -62,6 +62,9 @@ export type MockAlbum = {
   color2: string;
   year: number;
   owned: boolean;
+  /** 실제 데이터: 앨범 커버 이미지 */
+  coverUrl?: string;
+  releaseDate?: string;
 };
 
 export const ALBUMS: MockAlbum[] = [
@@ -83,6 +86,10 @@ export type MockTrade = { date: string; kind: "구매" | "교환" | "양도" | "
 export type MockCard = {
   id: string;
   memberId: string;
+  /** 실제 데이터 멤버 (mock 멤버 대신 사용) */
+  member?: { name: string; color: string };
+  /** 뒷면에 쓸 그룹 이름 */
+  groupName?: string;
   album: string;
   rare?: boolean;
   owned: boolean;

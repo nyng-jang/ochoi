@@ -2,7 +2,7 @@
 // 이미 하루 안에 조회한 아티스트는 다시 부르지 않는다 (외부 API 호출 제한 대응)
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getArtistDetail, getGroupMemberIds, type ArtistDetail } from "@/lib/sources/wikidata";
-import { getDeezerReleases, getMusicBrainzReleases, mergeReleases } from "@/lib/sources/music";
+import { getDeezerReleases, getMusicBrainzReleases, mergeReleases, resolveMusicBrainzId } from "@/lib/sources/music";
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
@@ -17,6 +17,7 @@ export async function importArtist(db: SupabaseClient, wikidataId: string, { for
   }
 
   const detail = await getArtistDetail(wikidataId);
+  detail.musicbrainzId = await resolveMusicBrainzId(wikidataId, detail.musicbrainzId);
   const artistId = await upsertArtist(db, detail);
 
   if (detail.kind === "group") {
