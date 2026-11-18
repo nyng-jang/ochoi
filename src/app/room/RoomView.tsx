@@ -98,23 +98,27 @@ export default function RoomView({ data, biasWikidataId }: { data: RoomData; bia
   );
 
   // 포카 도감: 최근 앨범 2장 × 멤버 (아직 보유 기록 없음 → 전부 빈 포켓)
-  const cards: MockCard[] = useMemo(
+  const perPage = members.length > 4 ? 9 : 4;
+  const cards: (MockCard | undefined)[] = useMemo(
     () =>
       data.albums
         .filter((a) => a.releaseType !== "single")
         .slice(-2)
         .reverse()
-        .flatMap((al) =>
-          members.map((m, i) => ({
+        .flatMap((al) => {
+          const page: (MockCard | undefined)[] = members.map((m, i) => ({
             id: `${al.id}-${m.id}`,
             memberId: m.id,
             member: { name: shortName(m.name), color: PALETTE[i % PALETTE.length] },
             groupName: artist.nameEn?.toUpperCase() ?? artist.name,
             album: al.title,
             owned: false,
-          })),
-        ),
-    [data.albums, members, artist],
+          }));
+          // 앨범마다 한 면을 쓰도록 남는 포켓은 비워둠
+          while (page.length % perPage) page.push(undefined);
+          return page;
+        }),
+    [data.albums, members, artist, perPage],
   );
 
   const firstRelease = data.firstRelease;
@@ -229,8 +233,8 @@ export default function RoomView({ data, biasWikidataId }: { data: RoomData; bia
         )}
         {tab === "binder" && (
           <>
-            <p className="mb-3 text-sm text-ink-soft">최근 앨범 포카 도감이에요. 아직 등록한 포카가 없어서 전부 빈 포켓이에요.</p>
-            <PhotocardBinder cards={cards} perPage={members.length > 4 ? 9 : 4} coverColor={biasColor} title={artist.nameEn?.toUpperCase() ?? artist.name} />
+            <p className="mb-3 text-sm text-ink-soft">최근 미니앨범 2장의 멤버별 포카 도감이에요(앨범 1장 = 1면). 아직 등록한 포카가 없어서 전부 빈 포켓이에요.</p>
+            <PhotocardBinder cards={cards} perPage={perPage} coverColor={biasColor} title={artist.nameEn?.toUpperCase() ?? artist.name} />
           </>
         )}
         {tab === "goods" && (

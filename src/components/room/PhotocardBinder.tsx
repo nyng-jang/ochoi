@@ -46,7 +46,7 @@ export function Pocket({ card, onOpen }: { card?: MockCard; onOpen?: (c: MockCar
         <div className="absolute inset-1 flex flex-col items-center justify-center rounded-md border border-dashed border-ink/20 text-center">
           <div className="mb-1 h-6 w-6 rounded-full bg-ink/10" />
           <p className="text-[10px] font-bold text-ink-soft">{(card.member ?? memberById(card.memberId)).name}</p>
-          <p className="text-[9px] text-ink-soft/70">미보유</p>
+          <p className="line-clamp-1 px-1 text-[9px] text-ink-soft/70">{card.member ? card.album : "미보유"}</p>
         </div>
       ) : null}
     </div>
@@ -54,7 +54,8 @@ export function Pocket({ card, onOpen }: { card?: MockCard; onOpen?: (c: MockCar
 }
 
 type Props = {
-  cards: MockCard[];
+  /** undefined는 빈 포켓 (앨범별로 페이지를 나눌 때 채우기용) */
+  cards: (MockCard | undefined)[];
   /** 한 면에 들어가는 포켓 수 (2×2 = 4, 3×3 = 9) */
   perPage?: 4 | 9;
   coverColor?: string;
